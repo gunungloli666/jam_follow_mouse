@@ -7,17 +7,20 @@ import java.util.Locale;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.animation.TranslateTransition;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 
-public class MouseFollowerPlugin extends StackPane{
+public class MouseFollowerPlugin extends AnchorPane{
 	double width; 
 	double height; 	
 	double radius = 90. ;
@@ -26,7 +29,6 @@ public class MouseFollowerPlugin extends StackPane{
 			"EEEEEEEE:d:MMMMMMMM:yyyy:hh:mm:ss", new Locale("in", "ID"));
 
 	Group root; 
-	
 	
 	ArrayList<DynamicsText> allList = new ArrayList<>(); 
 	
@@ -41,6 +43,13 @@ public class MouseFollowerPlugin extends StackPane{
 	
 	ArrayList<DynamicsText> combineDate = new ArrayList<>(); 
 	
+	double secondAngle; 
+	double minuteAngle; 
+	double hoursAngle; 
+
+	ArrayList<DynamicsText> listLabel = new ArrayList<>(); 
+	
+	
 	Timeline animasi; 
 	
 	double animasiAngle= 0; 
@@ -51,6 +60,10 @@ public class MouseFollowerPlugin extends StackPane{
 	
 	final double TWO_PI = Math.PI * 2;
 
+	Timeline mouseAnimasi; 
+	
+	Thread thread; 
+	
 	public MouseFollowerPlugin(double width, double height){
 		this.width = width; 
 		this.height = height; 
@@ -63,7 +76,6 @@ public class MouseFollowerPlugin extends StackPane{
 		setPrefSize(width, height);
 		
 		date = getDate(); 
-		
 		animasi = new Timeline();
 		animasi.getKeyFrames().addAll(
 				new KeyFrame(Duration.seconds(1),
@@ -79,10 +91,15 @@ public class MouseFollowerPlugin extends StackPane{
 		animasi.setAutoReverse(false); 
 		animasi.setCycleCount(Animation.INDEFINITE);
 		
-		addEventHandler(MouseEvent.MOUSE_MOVED , new EventHandler<MouseEvent>() {
+		mouseAnimasi = new Timeline(); 
+		mouseAnimasi.setAutoReverse(false); 
+		mouseAnimasi.setCycleCount(1);
+		
+		addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent evt) {
-				mouseRespon(evt.getX(), evt.getY()); 
+				mouseRespon(evt.getX() + 120 , evt.getY()  + 120); 
+				
 			}
 		});
 		
@@ -90,19 +107,76 @@ public class MouseFollowerPlugin extends StackPane{
 		setTextPosition(0);
 		initClockList();
 		setInitClockPotition();
-		getChildren().add(root); 
+	
 		addClockLabel();
 		
+		getChildren().add(root); 
+	
+		play();
+
+	
+		// ini harus benar urutannya... 
 		allList.addAll(combineDate);
+		allList.addAll(listLabel); 
 		allList.addAll(textHours); 
 		allList.addAll(textMinute); 
 		allList.addAll(textSecond); 
-		
-		play();
 	}
 	
-	public void mouseRespon(double x, double y){
-		
+
+	public void mouseRespon(){
+		mouseRespon(600, 500);
+	}
+	
+	public void mouseRespon(final double x, final double y){
+		animasi.pause(); 
+		thread = new Thread(
+				new Runnable() {					
+					@Override
+					public void run() {
+						int i = 0; 
+						while(threadStatus && i < allList.size()){
+							final int j = i;
+							Platform.runLater(new Runnable() {
+								@Override
+								public void run() {
+									DynamicsText text = allList.get(j); 
+									TranslateTransition transition = new TranslateTransition();
+									transition.setNode(text); 
+									transition.setFromX(text.getTranslateX()); 
+									transition.setFromY(text.getTranslateY());
+									text.setDestinyOffset(x, y);
+									text.initCurrentOffSet();
+									double destX = text.getPotitionX();
+									double destY = text.getPotitonY(); 
+									transition.setToX(destX);
+									transition.setToY(destY);
+									transition.setDuration(Duration.seconds(1));
+									transition.setAutoReverse(false); 
+									transition.setCycleCount(1);
+									transition.play();
+								}
+							});
+							try{
+								Thread.sleep(25);
+							}catch(Exception e){}
+							i++; 
+						}
+					}
+				});
+		thread.start();
+		animasi.play();
+	}
+	
+	boolean threadStatus = true; 
+	
+	public void stopThread(){
+		threadStatus = false; 
+	}
+	
+	
+	public Thread getThread(){
+		return thread; 
 	}
 	
 	
@@ -167,6 +241,8 @@ public class MouseFollowerPlugin extends StackPane{
 		for(DynamicsText t : combineDate){
 			double x = radius * Math.cos(angle); 
 			double y = radius * Math.sin(angle); 
+			t.setAngle(angle);
+			t.setRadius(radius);
 			t.move(x, y);
 			angle -= angleStep;
 		}
@@ -188,17 +264,12 @@ public class MouseFollowerPlugin extends StackPane{
 			text.setFont(Font.font(null, FontWeight.BOLD, 14));
 			textHours.add(text); 
 		}
-		
 		root.getChildren().addAll(textHours); 
 		root.getChildren().addAll(textMinute); 
 		root.getChildren().addAll(textSecond); 
 	}
 
-	double secondAngle; 
-	double minuteAngle; 
-	double hoursAngle; 
 
-	ArrayList<DynamicsText> listLabel = new ArrayList<>(); 
 	
 	public void addClockLabel(){
 		double radius = this.radius - 22;
@@ -208,13 +279,15 @@ public class MouseFollowerPlugin extends StackPane{
 			DynamicsText t  = new DynamicsText(Integer.toString(i), offsetX, offsetY); 
 			double x = radius * Math.cos(angle0); 
 			double y = radius * Math.sin(angle0); 
+			t.setAngle(angle0); 
+			t.setRadius(radius);
 			t.move(x, y);
 			angle0 += step; 
 			listLabel.add(t); 
 		}
 		
 		root.getChildren().addAll(listLabel);
-		allList.addAll(listLabel); 
+//		allList.addAll(listLabel); 
 	}
 	
 	public void setInitClockPotition(){
@@ -251,6 +324,8 @@ public class MouseFollowerPlugin extends StackPane{
 		for(DynamicsText t : textSecond){
 			double x = secondsRadius * Math.cos(secondAngle); 
 			double y = secondsRadius * Math.sin(secondAngle); 
+			t.setAngle(secondAngle);
+			t.setRadius(secondsRadius); 
 			t.move(x, y);
 			secondsRadius += secondsRadiusStep; 
 		}
@@ -260,6 +335,8 @@ public class MouseFollowerPlugin extends StackPane{
 		for(DynamicsText t : textMinute ){
 			double x = minuteRadius * Math.cos(minuteAngle); 
 			double y = minuteRadius * Math.sin(minuteAngle); 
+			t.setRadius(minuteRadius); 
+			t.setAngle(minuteAngle); 
 			t.move(x, y);
 			minuteRadius += minuteRadiusStep; 
 		}
@@ -269,12 +346,13 @@ public class MouseFollowerPlugin extends StackPane{
 		for( DynamicsText t : textHours){
 			double x = hoursRadius * Math.cos(hoursAngle); 
 			double y = hoursRadius * Math.sin(hoursAngle); 
+			t.setAngle(hoursAngle); 
+			t.setRadius(hoursRadius);
 			t.move(x, y);
 			hoursRadius += hoursRadiusStep; 
 		}
 	}
 	
-
 	public String[] getDate() {
 		String date = format.format(new Date());
 		String out[] = date.toUpperCase().split(":");

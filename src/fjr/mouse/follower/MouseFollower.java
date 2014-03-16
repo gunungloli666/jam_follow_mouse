@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class MouseFollower extends Application{
 	
@@ -25,7 +26,7 @@ public class MouseFollower extends Application{
 		
 		root.getChildren().add(
 				plugin); 
-		
+//		
 //		root.getChildren().add(
 //				new VBox(){{
 //					setSpacing(5); 
@@ -36,7 +37,8 @@ public class MouseFollower extends Application{
 //						setOnAction(new EventHandler<ActionEvent>() {										
 //							@Override
 //							public void handle(ActionEvent arg0) {
-//								plugin.play();
+////								plugin.play();
+//								plugin.mouseRespon();
 //							}
 //						});
 //					}});
@@ -46,12 +48,20 @@ public class MouseFollower extends Application{
 //						setOnAction(new EventHandler<ActionEvent>() {
 //							@Override
 //							public void handle(ActionEvent arg0) {	
-//								plugin.pause(); 
+////								plugin.pause(); 
 //							}
 //						});
 //					}}); 
 //				}}
 //				); 
+		stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+
+			@Override
+			public void handle(WindowEvent arg0) {
+//				plugin.getThread().stop();
+				plugin.stopThread(); 
+			}
+		});
 		stage.show();
 	}
 	
