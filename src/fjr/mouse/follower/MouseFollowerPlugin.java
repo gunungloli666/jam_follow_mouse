@@ -28,6 +28,9 @@ public class MouseFollowerPlugin extends StackPane{
 
 	Group root; 
 	
+	
+	ArrayList<Text> allList = new ArrayList<>(); 
+	
 	ArrayList<Text> textDate = new ArrayList<>(); 
 	ArrayList<Text> textMonth = new ArrayList<>(); 
 	ArrayList<Text> textYear = new ArrayList<>(); 
@@ -90,10 +93,17 @@ public class MouseFollowerPlugin extends StackPane{
 		setInitClockPotition();
 		getChildren().add(root); 
 		addClockLabel();
+		
+		allList.addAll(combineDate);
+		allList.addAll(textHours); 
+		allList.addAll(textMinute); 
+		allList.addAll(textSecond); 
+		
 		play();
 	}
 	
 	public void mouseRespon(double x, double y){
+		
 	}
 	
 	
