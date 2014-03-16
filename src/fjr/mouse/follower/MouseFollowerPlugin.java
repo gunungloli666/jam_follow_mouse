@@ -1,4 +1,9 @@
+
+// @author: mohammad Fajar  
+
+
 package fjr.mouse.follower;
+
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -7,7 +12,6 @@ import java.util.Locale;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
